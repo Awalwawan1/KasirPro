@@ -403,7 +403,7 @@ select.skeuo-input{
       <button class="skeuo-btn accent block" id="save-settings-btn">Simpan Pengaturan</button>
     </div>
     <div class="skeuo-card">
-      <label style="display:block;font-size:.75rem;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">Konfigurasi API</label>
+      <label style="display:block;font-size:.75rem;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">Aplikasi Buatan AI</label>
       <p id="api-status" style="font-size:.8rem;color:var(--muted);">Memeriksa...</p>
     </div>
   </section>
@@ -632,7 +632,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadProducts();
     await loadTransactions();
     state.apiReady = true;
-    if (apiStatusEl) apiStatusEl.innerHTML = '✅ Terhubung ke Google Sheets API';
+    if (apiStatusEl) apiStatusEl.innerHTML = '✅ Created By : Awal';
   } catch(err){
     console.error('Load error:', err);
     if (apiStatusEl) apiStatusEl.innerHTML = '❌ Gagal terhubung: ' + err.message;
@@ -1090,9 +1090,9 @@ function openProductModal(existing){
     <label>ID Produk</label>
     <input type="text" id="modal-id" class="skeuo-input" value="${isEdit ? existing.ID : 'P' + Date.now()}" ${isEdit ? 'readonly' : ''}>
     <label>Nama</label>
-    <input type="text" id="modal-nama" class="skeuo-input" value="${isEdit ? escapeHtml(existing.Nama) : ''}" placeholder="Contoh: Kopi Hitam">
+    <input type="text" id="modal-nama" class="skeuo-input" value="${isEdit ? escapeHtml(existing.Nama) : ''}" placeholder="Input Nama Menu">
     <label>Harga (Rp)</label>
-    <input type="text" id="modal-harga" class="skeuo-input" inputmode="numeric" value="${isEdit ? formatNumberInput(existing.Harga) : ''}" placeholder="15.000">
+    <input type="text" id="modal-harga" class="skeuo-input" inputmode="numeric" value="${isEdit ? formatNumberInput(existing.Harga) : ''}" placeholder="Input Harga Menu">
     <label>Kategori</label>
     <select id="modal-kategori" class="skeuo-input">
       <option value="Makanan" ${isEdit && existing.Kategori === 'Makanan' ? 'selected' : (!isEdit ? 'selected' : '')}>Makanan</option>
