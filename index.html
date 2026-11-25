@@ -715,7 +715,7 @@ async function loadSettings(){
     state.settings = { ...state.settings, ...res.data };
     applyTheme(state.settings.Tema);
     applyAccent(state.settings.Accent || '#ff6b35');
-    document.getElementById('store-name').textContent = state.settings.Nama_Toko || 'KasirKu';
+    document.getElementById('store-name').textContent = state.settings.Nama_Toko || 'Kasirku';
     syncSettingsUI();
   }
 }
