@@ -302,6 +302,15 @@ select.skeuo-input{
   .product-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));}
   .floating-tab-bar{width:420px;}
 }
+  @keyframes shake{
+  0%,100%{transform:translateX(0);}
+  25%{transform:translateX(-6px);}
+  75%{transform:translateX(6px);}
+}
+.skeuo-input.error{
+  outline:2px solid #ef4444;
+  animation:shake .3s ease;
+}
 </style>
 </head>
 <body>
@@ -1095,9 +1104,10 @@ function openProductModal(existing){
     <input type="text" id="modal-harga" class="skeuo-input" inputmode="numeric" value="${isEdit ? formatNumberInput(existing.Harga) : ''}" placeholder="Input Harga Menu">
     <label>Kategori</label>
     <select id="modal-kategori" class="skeuo-input">
-      <option value="Makanan" ${isEdit && existing.Kategori === 'Makanan' ? 'selected' : (!isEdit ? 'selected' : '')}>Makanan</option>
-      <option value="Minuman" ${isEdit && existing.Kategori === 'Minuman' ? 'selected' : ''}>Minuman</option>
-    </select>
+  <option value="" disabled ${!isEdit || !existing.Kategori ? 'selected' : ''}>— Pilih Kategori —</option>
+  <option value="Makanan" ${isEdit && existing.Kategori === 'Makanan' ? 'selected' : ''}>Makanan</option>
+  <option value="Minuman" ${isEdit && existing.Kategori === 'Minuman' ? 'selected' : ''}>Minuman</option>
+</select>
     <div class="modal-actions">
       <button class="skeuo-btn" onclick="closeModal()">Batal</button>
       <button class="skeuo-btn accent" onclick="submitProduct(${isEdit})">Simpan</button>
@@ -1118,9 +1128,20 @@ async function submitProduct(isEdit){
     Kategori: document.getElementById('modal-kategori').value,
     Status: 'Aktif'
   };
+
+ // ⚡ Validasi: kategori wajib dipilih
+if (!data.Kategori){
+  const sel = document.getElementById('modal-kategori');
+  sel.classList.add('error');
+  sel.focus();
+  setTimeout(() => sel.classList.remove('error'), 1000);
+  return showToast('⚠️ Kategori wajib dipilih');
+}
+
   if (!data.ID || !data.Nama || isNaN(data.Harga) || data.Harga <= 0){
     return showToast('Lengkapi semua field dengan benar');
   }
+
   showLoading(isEdit ? 'Menyimpan perubahan...' : 'Menambahkan produk...');
   try{
     const res = await apiPost('saveProduct', data);
