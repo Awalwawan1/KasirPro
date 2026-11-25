@@ -27,22 +27,22 @@ body{
   padding-bottom:110px; min-height:100vh; overflow-x:hidden;
   transition:background .3s,color .3s;
 }
-/* ============ HEADER + CLOCK ============ */
+/* ============ HEADER + CLOCK (diperkecil) ============ */
 .app-header{padding:20px 16px 12px;text-align:center;}
 .app-header h1{font-size:1.8rem;font-weight:800;letter-spacing:-.5px;}
 .header-sub{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:2px;}
 .clock-display{
-  margin-top:14px;display:inline-flex;flex-direction:column;align-items:center;
-  padding:10px 22px;border-radius:14px;background:var(--card-bg);
+  margin-top:10px;display:inline-flex;flex-direction:column;align-items:center;
+  padding:7px 16px;border-radius:12px;background:var(--card-bg);
   box-shadow:inset 4px 4px 8px var(--shadow-dark),inset -4px -4px 8px var(--shadow-light);
 }
 .clock-time{
-  font-family:'Courier New',monospace;font-size:1.7rem;font-weight:800;
-  letter-spacing:3px;color:var(--accent);
-  text-shadow:0 0 12px rgba(255,107,53,.35);
+  font-family:'Courier New',monospace;font-size:1.35rem;font-weight:800;
+  letter-spacing:2px;color:var(--accent);
+  text-shadow:0 0 10px rgba(255,107,53,.3);
   transition:color .3s;
 }
-.clock-date{font-size:.7rem;color:var(--muted);letter-spacing:1px;margin-top:2px;text-transform:uppercase;font-weight:600;}
+.clock-date{font-size:.65rem;color:var(--muted);letter-spacing:1px;margin-top:1px;text-transform:uppercase;font-weight:600;}
 /* ============ VIEW ============ */
 .view{display:none;padding:0 16px;}
 .view.active{display:block;animation:fadeIn .25s ease;}
@@ -253,7 +253,7 @@ select.skeuo-input{
 .sold-name{font-weight:600;font-size:.9rem;line-height:1.2;}
 .sold-meta{font-size:.72rem;color:var(--muted);margin-top:2px;}
 .sold-total{font-weight:700;color:var(--accent);font-size:.85rem;white-space:nowrap;}
-/* ============ CASH PAYMENT ============ */
+/* ============ CASH PAYMENT (Kembalian diperbesar) ============ */
 .cash-total-box{
   display:flex;justify-content:space-between;font-weight:800;font-size:1.05rem;
   margin-bottom:16px;padding:12px 14px;background:var(--card-bg);border-radius:10px;
@@ -261,11 +261,14 @@ select.skeuo-input{
 }
 .cash-total-box .amount{color:var(--accent);}
 .change-box{
-  display:flex;justify-content:space-between;font-weight:800;font-size:1.1rem;
-  padding:12px 14px;background:var(--card-bg);border-radius:10px;margin-bottom:16px;
+  display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:1rem;
+  padding:12px 16px;background:var(--card-bg);border-radius:10px;margin-bottom:16px;
   box-shadow:inset 3px 3px 6px var(--shadow-dark),inset -3px -3px 6px var(--shadow-light);
 }
-#change-amount{color:#10b981;}
+#change-amount{
+  color:#10b981;font-size:1.65rem;font-weight:900;
+  letter-spacing:-.5px;line-height:1.1;
+}
 .suggestion-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
 .suggestion-btn{
   padding:8px 12px;font-size:.78rem;border:none;border-radius:10px;
@@ -406,7 +409,6 @@ select.skeuo-input{
   </section>
 </main>
 
-<!-- ============ FLOATING NOTCH TAB BAR ============ -->
 <nav class="floating-tab-bar">
   <div class="tab-bar-notch"></div>
   <button class="tab-item active" data-view="dashboard">📊<span>Dashboard</span></button>
@@ -415,7 +417,6 @@ select.skeuo-input{
   <button class="tab-item" data-view="settings">⚙️<span>Atur</span></button>
 </nav>
 
-<!-- Toast, Modal, Loading -->
 <div id="toast"></div>
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal" id="modal-content"></div>
@@ -427,7 +428,7 @@ select.skeuo-input{
 
 <script>
 /* ==========================================
-   KONFIGURASI — GANTI DENGAN URL ANDA
+   KONFIGURASI
    ========================================== */
 const API_URL = 'https://script.google.com/macros/s/AKfycby5uKavl82rPKapv7Nc_REeB_-Tb7LmHg11kWde-2e-kePhPPEXZPNLevDXGBNAO08F/exec';
 
@@ -451,7 +452,6 @@ let chartInstance = null;
    UTILITAS
    ========================================== */
 function formatRupiah(n){return 'Rp ' + Number(n||0).toLocaleString('id-ID');}
-
 function formatNumberInput(val){
   const digits = String(val||'').replace(/\D/g, '');
   if (!digits) return '';
@@ -460,7 +460,6 @@ function formatNumberInput(val){
 function parseNumberInput(val){
   return Number(String(val||'').replace(/\D/g, '')) || 0;
 }
-
 function showToast(msg, duration = 3000){
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -468,7 +467,6 @@ function showToast(msg, duration = 3000){
   clearTimeout(t._timer);
   t._timer = setTimeout(()=>t.classList.remove('show'), duration);
 }
-
 function showLoading(text){
   document.getElementById('loading-text').textContent = text || 'Memproses...';
   document.getElementById('loading-overlay').classList.add('show');
@@ -476,7 +474,6 @@ function showLoading(text){
 function hideLoading(){
   document.getElementById('loading-overlay').classList.remove('show');
 }
-
 function openModal(html){
   document.getElementById('modal-content').innerHTML = html;
   document.getElementById('modal-overlay').classList.add('show');
@@ -487,11 +484,30 @@ function closeModal(){
 document.getElementById('modal-overlay').addEventListener('click', e => {
   if (e.target.id === 'modal-overlay') closeModal();
 });
-
 function escapeHtml(s){
   return String(s||'').replace(/[&<>"']/g, c => ({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
   }[c]));
+}
+
+/* ==========================================
+   TIMEZONE-AWARE HELPERS
+   ========================================== */
+function localDateKey(d){
+  const dt = new Date(d);
+  if (isNaN(dt)) return '';
+  return dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0') + '-' + String(dt.getDate()).padStart(2,'0');
+}
+function localMonthKey(d){
+  const dt = new Date(d);
+  if (isNaN(dt)) return '';
+  return dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0');
+}
+function isSameLocalDay(isoStr, refDate = new Date()){
+  return localDateKey(isoStr) === localDateKey(refDate);
+}
+function isSameLocalMonth(isoStr, refDate = new Date()){
+  return localMonthKey(isoStr) === localMonthKey(refDate);
 }
 
 /* ==========================================
@@ -551,7 +567,6 @@ async function apiGet(action, params = {}){
     return { success:false, message:err.message, data:[] };
   }
 }
-
 async function apiPost(action, payload){
   try{
     const url = new URL(API_URL);
@@ -648,23 +663,18 @@ function setupOtherEvents(){
   document.getElementById('checkout-btn').addEventListener('click', checkout);
   document.getElementById('save-settings-btn').addEventListener('click', saveSettings);
   document.getElementById('add-product-btn').addEventListener('click', () => openProductModal());
-
-  // Klik kartu Transaksi → modal detail produk terjual
   document.getElementById('stat-tx-card').addEventListener('click', openSalesDetailModal);
 
-  // Chart range switch
   document.querySelectorAll('.chart-switch button').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.chart-switch button').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       state.chartRange = btn.dataset.range;
       renderChart();
-      // Update hint teks di kartu Transaksi
       updateTxCardHint();
     });
   });
 
-  // Kasir category tabs
   document.querySelectorAll('.kasir-cat-tab').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.kasir-cat-tab').forEach(b => b.classList.remove('active'));
@@ -674,7 +684,6 @@ function setupOtherEvents(){
     });
   });
 
-  // Color swatches
   document.querySelectorAll('.color-swatch').forEach(btn => {
     btn.addEventListener('click', () => {
       state.settings.Accent = btn.dataset.color;
@@ -710,20 +719,17 @@ async function loadSettings(){
     syncSettingsUI();
   }
 }
-
 function syncSettingsUI(){
   document.getElementById('input-store-name').value = state.settings.Nama_Toko || '';
   document.getElementById('select-theme').value = state.settings.Tema || 'light';
   applyAccent(state.settings.Accent || '#ff6b35');
 }
-
 async function loadProducts(){
   const res = await apiGet('getProducts');
   if (res.success && Array.isArray(res.data)){
     state.products = res.data.filter(p => String(p.Status||'Aktif').toLowerCase() === 'aktif');
   }
 }
-
 async function loadTransactions(){
   const res = await apiGet('getTransactions');
   if (res.success && Array.isArray(res.data)){
@@ -735,8 +741,7 @@ async function loadTransactions(){
    DASHBOARD
    ========================================== */
 function renderDashboard(){
-  const today = new Date().toISOString().split('T')[0];
-  const todayTx = state.transactions.filter(tx => String(tx.Tanggal||'').startsWith(today));
+  const todayTx = state.transactions.filter(tx => isSameLocalDay(String(tx.Tanggal||'')));
   const totalToday = todayTx.reduce((s, tx) => s + Number(tx.Total||0), 0);
   const totalAll = state.transactions.reduce((s, tx) => s + Number(tx.Total||0), 0);
 
@@ -747,22 +752,15 @@ function renderDashboard(){
 }
 
 /* ==========================================
-   DETAIL PRODUK TERJUAL (MODAL)
+   DETAIL PRODUK TERJUAL
    ========================================== */
 function getSoldProducts(range){
-  const now = new Date();
-  let filterFn;
-  if (range === 'daily'){
-    const today = now.toISOString().split('T')[0];
-    filterFn = tx => String(tx.Tanggal||'').startsWith(today);
-  } else {
-    const month = now.toISOString().slice(0,7);
-    filterFn = tx => String(tx.Tanggal||'').slice(0,7) === month;
-  }
+  const txs = state.transactions.filter(tx => {
+    const tgl = String(tx.Tanggal || '');
+    return range === 'daily' ? isSameLocalDay(tgl) : isSameLocalMonth(tgl);
+  });
 
-  const txs = state.transactions.filter(filterFn);
   const agg = {};
-
   txs.forEach(tx => {
     let items = tx.Detail_Item;
     if (typeof items === 'string'){
@@ -778,7 +776,6 @@ function getSoldProducts(range){
       agg[key].total += (Number(item.harga) || 0) * (Number(item.qty) || 0);
     });
   });
-
   return Object.values(agg).sort((a,b) => b.qty - a.qty);
 }
 
@@ -787,10 +784,18 @@ function openSalesDetailModal(){
   const label = range === 'daily' ? 'Hari Ini' : 'Bulan Ini';
   const products = getSoldProducts(range);
 
+  const txsCount = state.transactions.filter(tx => {
+    const tgl = String(tx.Tanggal || '');
+    return range === 'daily' ? isSameLocalDay(tgl) : isSameLocalMonth(tgl);
+  }).length;
+
   if (!products.length){
+    const msg = txsCount > 0
+      ? `Ada ${txsCount} transaksi ${label.toLowerCase()}, tapi detail item kosong.<br><small style="color:var(--muted)">Kemungkinan transaksi lama tersimpan sebelum fix header. Coba transaksi baru.</small>`
+      : `Belum ada transaksi ${label.toLowerCase()}.`;
     openModal(`
       <h3>📦 Produk Terjual ${label}</h3>
-      <div class="cart-empty">Belum ada transaksi ${label.toLowerCase()}.</div>
+      <div class="cart-empty">${msg}</div>
       <div class="modal-actions">
         <button class="skeuo-btn accent" onclick="closeModal()">Tutup</button>
       </div>
@@ -800,7 +805,6 @@ function openSalesDetailModal(){
 
   const totalQty = products.reduce((s,p) => s + p.qty, 0);
   const totalRev = products.reduce((s,p) => s + p.total, 0);
-
   const rows = products.map((p, i) => `
     <div class="sold-item">
       <div class="sold-rank">${i+1}</div>
@@ -815,14 +819,8 @@ function openSalesDetailModal(){
   openModal(`
     <h3>📦 Produk Terjual ${label}</h3>
     <div class="sold-summary">
-      <div class="sold-stat">
-        <span>Item Terjual</span>
-        <strong>${totalQty}</strong>
-      </div>
-      <div class="sold-stat">
-        <span>Total Omzet</span>
-        <strong>${formatRupiah(totalRev)}</strong>
-      </div>
+      <div class="sold-stat"><span>Item Terjual</span><strong>${totalQty}</strong></div>
+      <div class="sold-stat"><span>Total Omzet</span><strong>${formatRupiah(totalRev)}</strong></div>
     </div>
     <div class="sold-list">${rows}</div>
     <div class="modal-actions">
@@ -841,14 +839,14 @@ function renderChart(){
   if (state.chartRange === 'daily'){
     const dailyData = {};
     state.transactions.forEach(tx => {
-      const day = String(tx.Tanggal||'').split('T')[0];
-      if (day) dailyData[day] = (dailyData[day]||0) + Number(tx.Total||0);
+      const key = localDateKey(tx.Tanggal);
+      if (key) dailyData[key] = (dailyData[key]||0) + Number(tx.Total||0);
     });
     const days = [];
     for (let i=6; i>=0; i--){
       const d = new Date();
       d.setDate(d.getDate() - i);
-      days.push(d.toISOString().split('T')[0]);
+      days.push(localDateKey(d));
     }
     labels = days.map(d => d.slice(5));
     values = days.map(d => dailyData[d] || 0);
@@ -856,14 +854,14 @@ function renderChart(){
   } else {
     const monthlyData = {};
     state.transactions.forEach(tx => {
-      const m = String(tx.Tanggal||'').slice(0,7);
-      if (m) monthlyData[m] = (monthlyData[m]||0) + Number(tx.Total||0);
+      const key = localMonthKey(tx.Tanggal);
+      if (key) monthlyData[key] = (monthlyData[key]||0) + Number(tx.Total||0);
     });
     const months = [];
     for (let i=5; i>=0; i--){
       const d = new Date();
       d.setMonth(d.getMonth() - i);
-      months.push(d.toISOString().slice(0,7));
+      months.push(localMonthKey(d));
     }
     const monthNames = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
     labels = months.map(m => monthNames[parseInt(m.slice(5))-1] + ' ' + m.slice(2,4));
@@ -910,7 +908,6 @@ function renderProducts(){
       ${p.Kategori ? `<div class="p-cat">${escapeHtml(p.Kategori)}</div>` : ''}
     </div>
   `).join('');
-
   c.querySelectorAll('.product-card').forEach(card => {
     card.addEventListener('click', () => {
       addToCart({
@@ -947,7 +944,6 @@ function renderCart(){
         </div>
       </li>
     `).join('');
-
     list.querySelectorAll('.qty-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const idx = Number(btn.dataset.idx);
@@ -970,14 +966,9 @@ function renderCart(){
 async function checkout(){
   if (!state.cart.length) return showToast('Keranjang kosong');
   if (!state.apiReady) return showToast('API belum terhubung. Periksa API_URL.');
-
   const total = state.cart.reduce((s, i) => s + i.harga * i.qty, 0);
-
-  if (state.paymentMethod === 'Tunai'){
-    openCashPaymentModal(total);
-  } else {
-    await finalizeCheckout(total);
-  }
+  if (state.paymentMethod === 'Tunai') openCashPaymentModal(total);
+  else await finalizeCheckout(total);
 }
 
 function openCashPaymentModal(total){
@@ -1026,21 +1017,18 @@ function openCashPaymentModal(total){
     if (input.value !== formatted) input.value = formatted;
     updateChange();
   });
-
   document.querySelectorAll('#suggestions .suggestion-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       input.value = formatNumberInput(btn.dataset.amount);
       updateChange();
     });
   });
-
   confirmBtn.addEventListener('click', async () => {
     const paid = parseNumberInput(input.value);
     if (paid < total) return;
     closeModal();
     await finalizeCheckout(total, paid);
   });
-
   updateChange();
   setTimeout(() => input.focus(), 100);
 }
@@ -1054,14 +1042,11 @@ async function finalizeCheckout(total, cashPaid){
     Metode_Bayar: state.paymentMethod,
     Detail_Item: state.cart.map(i => ({ id: i.id, nama: i.nama, harga: i.harga, qty: i.qty }))
   };
-
   try{
     const res = await apiPost('saveTransaction', payload);
     if (res.success){
       let msg = `✅ ${state.paymentMethod} • ${formatRupiah(total)}`;
-      if (cashPaid){
-        msg += ` • Kembali ${formatRupiah(cashPaid - total)}`;
-      }
+      if (cashPaid) msg += ` • Kembali ${formatRupiah(cashPaid - total)}`;
       showToast(msg, 4000);
       state.cart = [];
       renderCart();
@@ -1071,9 +1056,7 @@ async function finalizeCheckout(total, cashPaid){
     } else {
       showToast('Gagal: ' + (res.message || 'unknown'));
     }
-  } finally {
-    hideLoading();
-  }
+  } finally { hideLoading(); }
 }
 
 /* ==========================================
@@ -1120,7 +1103,6 @@ function openProductModal(existing){
       <button class="skeuo-btn accent" onclick="submitProduct(${isEdit})">Simpan</button>
     </div>
   `);
-
   const hargaInput = document.getElementById('modal-harga');
   hargaInput.addEventListener('input', () => {
     const formatted = formatNumberInput(hargaInput.value);
@@ -1139,7 +1121,6 @@ async function submitProduct(isEdit){
   if (!data.ID || !data.Nama || isNaN(data.Harga) || data.Harga <= 0){
     return showToast('Lengkapi semua field dengan benar');
   }
-
   showLoading(isEdit ? 'Menyimpan perubahan...' : 'Menambahkan produk...');
   try{
     const res = await apiPost('saveProduct', data);
@@ -1152,9 +1133,7 @@ async function submitProduct(isEdit){
     } else {
       showToast('Gagal: ' + (res.message||'unknown'));
     }
-  } finally {
-    hideLoading();
-  }
+  } finally { hideLoading(); }
 }
 
 window.editProduct = function(id){
@@ -1175,9 +1154,7 @@ window.deleteProduct = async function(id){
     } else {
       showToast('Gagal: ' + (res.message||'unknown'));
     }
-  } finally {
-    hideLoading();
-  }
+  } finally { hideLoading(); }
 };
 
 /* ==========================================
@@ -1203,7 +1180,6 @@ async function saveSettings(){
     renderChart();
     return;
   }
-
   showLoading('Menyimpan pengaturan...');
   try{
     const res = await apiPost('saveSettings', {
@@ -1213,9 +1189,7 @@ async function saveSettings(){
     });
     if (res.success) showToast('✅ Pengaturan disimpan');
     else showToast('Gagal: ' + (res.message||'unknown'));
-  } finally {
-    hideLoading();
-  }
+  } finally { hideLoading(); }
   renderChart();
 }
 </script>
