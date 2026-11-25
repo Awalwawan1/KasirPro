@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#ff6b35">
+<title>KasirKu — POS</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* ============ RESET & VARIABEL ============ */
+:root{
+  --bg:#e0e5ec; --text:#2d3436; --muted:#7a8a99;
+  --shadow-dark:#a3b1c6; --shadow-light:#ffffff;
+  --accent:#ff6b35; --accent-hover:#e55a2b;
+  --card-bg:#e0e5ec; --radius:16px;
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+}
+[data-theme="dark"]{
+  --bg:#1e222a; --text:#e6ebf2; --muted:#8a96a8;
+  --shadow-dark:#14171c; --shadow-light:#2a3038;
+  --card-bg:#1e222a; --accent:#ff8c5a;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{
+  font-family:var(--font); background:var(--bg); color:var(--text);
+  padding-bottom:110px; min-height:100vh; overflow-x:hidden;
+  transition:background .3s,color .3s;
+}
+/* ============ HEADER ============ */
+.app-header{padding:20px 16px 12px;text-align:center;}
+.app-header h1{font-size:1.8rem;font-weight:800;letter-spacing:-.5px;}
+.header-sub{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:2px;}
+/* ============ VIEW ============ */
+.view{display:none;padding:0 16px;}
+.view.active{display:block;animation:fadeIn .25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+h2{font-size:1.3rem;margin:16px 0 12px;font-weight:700;}
+h3{font-size:1rem;margin-bottom:10px;}
+/* ============ SKEUO CARD ============ */
+.skeuo-card{
+  background:var(--card-bg);border-radius:var(--radius);
+  box-shadow:8px 8px 16px var(--shadow-dark),-8px -8px 16px var(--shadow-light);
+  padding:20px;margin-bottom:16px;
+}
+/* ============ DASHBOARD ============ */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.stat-card{display:flex;flex-direction:column;gap:6px;}
+.stat-label{font-size:.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);}
+.stat-value{font-size:1.35rem;font-weight:800;color:var(--accent);}
+.chart-container{position:relative;height:220px;padding:12px;}
+.chart-switch{display:flex;gap:8px;margin-bottom:12px;}
+.chart-switch button{
+  flex:1;padding:8px;border:none;border-radius:10px;background:var(--card-bg);
+  box-shadow:4px 4px 8px var(--shadow-dark),-4px -4px 8px var(--shadow-light);
+  font-weight:600;font-size:.8rem;color:var(--text);cursor:pointer;
+}
+.chart-switch button.active{
+  box-shadow:inset 3px 3px 6px var(--shadow-dark),inset -3px -3px 6px var(--shadow-light);
+  color:var(--accent);
+}
+/* ============ PRODUK GRID ============ */
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-bottom:16px;}
+.product-card{
+  background:var(--card-bg);border-radius:12px;padding:14px;cursor:pointer;
+  box-shadow:6px 6px 12px var(--shadow-dark),-6px -6px 12px var(--shadow-light);
+  transition:all .12s ease;text-align:center;
+}
+.product-card:active{box-shadow:inset 4px 4px 8px var(--shadow-dark),inset -4px -4px 8px var(--shadow-light);}
+.p-name{font-weight:600;font-size:.85rem;line-height:1.2;}
+.p-price{color:var(--accent);font-weight:700;font-size:.85rem;margin-top:6px;}
+/* ============ CART ============ */
+#cart-items{list-style:none;max-height:200px;overflow-y:auto;}
+#cart-items li{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:8px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:.88rem;gap:8px;
+}
+.cart-item-info{flex:1;}
+.cart-item-qty{display:flex;align-items:center;gap:6px;}
+.qty-btn{
+  width:26px;height:26px;border:none;border-radius:50%;background:var(--card-bg);
+  box-shadow:3px 3px 6px var(--shadow-dark),-3px -3px 6px var(--shadow-light);
+  font-weight:800;cursor:pointer;color:var(--text);
+}
+.qty-btn:active{box-shadow:inset 2px 2px 4px var(--shadow-dark),inset -2px -2px 4px var(--shadow-light);}
+.cart-empty{color:var(--muted);font-size:.85rem;text-align:center;padding:16px 0;}
+.cart-total{
+  display:flex;justify-content:space-between;font-weight:800;font-size:1.1rem;
+  margin:12px 0;padding-top:10px;border-top:2px solid var(--accent);
+}
+.payment-methods{display:flex;gap:10px;margin-bottom:12px;}
+.pay-btn{
+  flex:1;padding:12px;border:none;border-radius:10px;background:var(--card-bg);
+  box-shadow:4px 4px 8px var(--shadow-dark),-4px -4px 8px var(--shadow-light);
+  font-weight:600;cursor:pointer;color:var(--text);font-size:.9rem;
+}
+.pay-btn.active{
+  box-shadow:inset 3px 3px 6px var(--shadow-dark),inset -3px -3px 6px var(--shadow-light);
+  color:var(--accent);
+}
+/* ============ BUTTONS & INPUTS ============ */
+.skeuo-btn{
+  background:var(--card-bg);border:none;border-radius:12px;padding:12px 20px;
+  font-weight:700;color:var(--text);cursor:pointer;font-size:.9rem;
+  box-shadow:6px 6px 12px var(--shadow-dark),-6px -6px 12px var(--shadow-light);
+  transition:all .1s;
+}
+.skeuo-btn:active{box-shadow:inset 4px 4px 8px var(--shadow-dark),inset -4px -4px 8px var(--shadow-light);}
+.skeuo-btn.accent{background:var(--accent);color:#fff;}
+.skeuo-btn.accent:active{box-shadow:inset 4px 4px 8px rgba(0,0,0,.3);}
+.skeuo-btn.block{width:100%;padding:14px;font-size:1rem;text-transform:uppercase;letter-spacing:1px;}
+.skeuo-btn.danger{color:#e74c3c;}
+.skeuo-input{
+  width:100%;padding:12px;border:none;border-radius:10px;background:var(--card-bg);
+  box-shadow:inset 4px 4px 8px var(--shadow-dark),inset -4px -4px 8px var(--shadow-light);
+  font-family:var(--font);font-size:.95rem;margin-bottom:12px;color:var(--text);
+}
+.skeuo-input:focus{outline:2px solid var(--accent);}
+.settings-card label{display:block;font-size:.75rem;font-weight:700;margin-bottom:6px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+/* ============ MENU LIST ============ */
+.menu-item{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:14px;margin-bottom:10px;background:var(--card-bg);border-radius:12px;
+  box-shadow:6px 6px 12px var(--shadow-dark),-6px -6px 12px var(--shadow-light);
+}
+.menu-item .info{flex:1;min-width:0;}
+.menu-item strong{display:block;font-size:.9rem;margin-bottom:2px;}
+.menu-item .price{color:var(--accent);font-weight:700;font-size:.85rem;}
+.menu-item .actions{display:flex;gap:6px;}
+.menu-item .actions button{padding:8px 10px;font-size:.75rem;}
+/* ============ FLOATING NOTCH TAB BAR ============ */
+.floating-tab-bar{
+  position:fixed;bottom:18px;left:50%;transform:translateX(-50%);
+  width:calc(100% - 32px);max-width:420px;height:70px;
+  background:var(--card-bg);border-radius:24px;
+  box-shadow:0 8px 32px rgba(0,0,0,.15),inset 0 1px 0 rgba(255,255,255,.6);
+  display:flex;align-items:center;justify-content:space-around;
+  padding:0 8px;z-index:1000;
+}
+.tab-bar-notch{
+  position:absolute;top:-12px;left:50%;transform:translateX(-50%);
+  width:60px;height:24px;background:var(--card-bg);
+  border-radius:0 0 30px 30px;
+  box-shadow:0 4px 10px rgba(0,0,0,.12);
+  pointer-events:none;z-index:1;
+}
+.tab-item{
+  position:relative;z-index:2;background:none;border:none;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  color:var(--muted);cursor:pointer;padding:8px 12px;border-radius:14px;
+  transition:all .2s;font-size:1.3rem;
+}
+.tab-item span{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+.tab-item.active{
+  color:var(--accent);
+  box-shadow:inset 3px 3px 6px var(--shadow-dark),inset -3px -3px 6px var(--shadow-light);
+}
+/* ============ TOAST & MODAL ============ */
+#toast{
+  position:fixed;top:20px;left:50%;transform:translateX(-50%);
+  background:#2d3436;color:#fff;padding:10px 18px;border-radius:10px;
+  font-size:.85rem;z-index:9999;opacity:0;transition:opacity .3s;
+  box-shadow:0 4px 12px rgba(0,0,0,.2);max-width:85%;text-align:center;
+  pointer-events:none;
+}
+#toast.show{opacity:1;}
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2000;
+  display:none;align-items:center;justify-content:center;padding:20px;
+}
+.modal-overlay.show{display:flex;}
+.modal{
+  background:var(--bg);border-radius:20px;padding:24px;width:100%;max-width:380px;
+  box-shadow:0 20px 60px rgba(0,0,0,.3);
+}
+.modal h3{margin-bottom:16px;font-size:1.1rem;}
+.modal-actions{display:flex;gap:10px;margin-top:8px;}
+.modal-actions button{flex:1;}
+/* ============ RESPONSIVE ============ */
+@media (min-width:600px){
+  .stats-grid{grid-template-columns:1fr 1fr 1fr;}
+  .product-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));}
+  .floating-tab-bar{width:420px;}
+}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <h1 id="store-name">KasirKu</h1>
+  <span class="header-sub">Point of Sale</span>
+</header>
+
+<main id="app-content">
+  <!-- ============ DASHBOARD ============ -->
+  <section id="view-dashboard" class="view active">
+    <h2>Dashboard</h2>
+    <div class="stats-grid">
+      <div class="stat-card skeuo-card">
+        <span class="stat-label">Hari Ini</span>
+        <span class="stat-value" id="stat-today">Rp 0</span>
+      </div>
+      <div class="stat-card skeuo-card">
+        <span class="stat-label">Transaksi</span>
+        <span class="stat-value" id="stat-tx-today">0</span>
+      </div>
+      <div class="stat-card skeuo-card" style="grid-column:span 2;">
+        <span class="stat-label">Total Keseluruhan</span>
+        <span class="stat-value" id="stat-total">Rp 0</span>
+      </div>
+    </div>
+    <div class="skeuo-card">
+      <div class="chart-switch">
+        <button class="active" data-range="daily">Harian</button>
+        <button data-range="monthly">Bulanan</button>
+      </div>
+      <div class="chart-container">
+        <canvas id="salesChart"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ KASIR ============ -->
+  <section id="view-cashier" class="view">
+    <h2>Kasir</h2>
+    <div class="product-grid" id="product-list"></div>
+    <div class="skeuo-card" id="cart-panel">
+      <h3>🛒 Keranjang</h3>
+      <ul id="cart-items"><li class="cart-empty">Belum ada item</li></ul>
+      <div class="cart-total">
+        <span>Total</span>
+        <span id="cart-total">Rp 0</span>
+      </div>
+      <div class="payment-methods">
+        <button class="pay-btn active" data-method="Tunai">💵 Tunai</button>
+        <button class="pay-btn" data-method="QRIS">📱 QRIS</button>
+      </div>
+      <button class="skeuo-btn accent block" id="checkout-btn">Bayar</button>
+    </div>
+  </section>
+
+  <!-- ============ MENU ============ -->
+  <section id="view-menu" class="view">
+    <h2>Kelola Menu</h2>
+    <button class="skeuo-btn accent block" id="add-product-btn" style="margin-bottom:16px;">+ Tambah Produk</button>
+    <div id="menu-list"></div>
+  </section>
+
+  <!-- ============ PENGATURAN ============ -->
+  <section id="view-settings" class="view">
+    <h2>Pengaturan</h2>
+    <div class="skeuo-card settings-card">
+      <label for="input-store-name">Nama Toko</label>
+      <input type="text" id="input-store-name" class="skeuo-input" placeholder="KasirKu">
+      <label for="select-theme">Tema</label>
+      <select id="select-theme" class="skeuo-input">
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+      </select>
+      <button class="skeuo-btn accent block" id="save-settings-btn">Simpan Pengaturan</button>
+    </div>
+    <div class="skeuo-card">
+      <label style="display:block;font-size:.75rem;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">Konfigurasi API</label>
+      <p id="api-status" style="font-size:.8rem;color:var(--muted);">Memeriksa...</p>
+    </div>
+  </section>
+</main>
+
+<!-- ============ FLOATING NOTCH TAB BAR ============ -->
+<nav class="floating-tab-bar">
+  <div class="tab-bar-notch"></div>
+  <button class="tab-item active" data-view="dashboard">📊<span>Dashboard</span></button>
+  <button class="tab-item" data-view="cashier">🛒<span>Kasir</span></button>
+  <button class="tab-item" data-view="menu">📋<span>Menu</span></button>
+  <button class="tab-item" data-view="settings">⚙️<span>Atur</span></button>
+</nav>
+
+<!-- Toast & Modal -->
+<div id="toast"></div>
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<script>
+/* ==========================================
+   KONFIGURASI — GANTI DENGAN URL ANDA
+   ========================================== */
+const API_URL = 'https://script.google.com/macros/s/AKfycby5uKavl82rPKapv7Nc_REeB_-Tb7LmHg11kWde-2e-kePhPPEXZPNLevDXGBNAO08F/exec';
+
+/* ==========================================
+   STATE
+   ========================================== */
+const state = {
+  products: [],
+  cart: [],
+  paymentMethod: 'Tunai',
+  settings: { Nama_Toko: 'KasirKu', Tema: 'light' },
+  transactions: [],
+  chartRange: 'daily',
+  apiReady: false
+};
+
+let chartInstance = null;
+
+/* ==========================================
+   UTILITAS
+   ========================================== */
+function formatRupiah(n){return 'Rp ' + Number(n||0).toLocaleString('id-ID');}
+
+function showToast(msg, duration = 3000){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.classList.remove('show'), duration);
+}
+
+function openModal(html){
+  document.getElementById('modal-content').innerHTML = html;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+function closeModal(){
+  document.getElementById('modal-overlay').classList.remove('show');
+}
+document.getElementById('modal-overlay').addEventListener('click', e => {
+  if (e.target.id === 'modal-overlay') closeModal();
+});
+
+/* ==========================================
+   API CLIENT (dengan error handling)
+   ========================================== */
+async function apiGet(action, params = {}){
+  try{
+    const url = new URL(API_URL);
+    url.searchParams.set('action', action);
+    Object.keys(params).forEach(k => url.searchParams.set(k, params[k]));
+    const res = await fetch(url.toString(), {redirect:'follow'});
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.json();
+  } catch(err){
+    console.warn('[API GET ' + action + ']', err.message);
+    return { success:false, message:err.message, data:[] };
+  }
+}
+
+async function apiPost(action, payload){
+  try{
+    const res = await fetch(API_URL, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({ action, ...payload }),
+      redirect:'follow'
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.json();
+  } catch(err){
+    console.warn('[API POST ' + action + ']', err.message);
+    return { success:false, message:err.message };
+  }
+}
+
+/* ==========================================
+   NAVIGASI — PASANG PALING AWAL!
+   ========================================== */
+function setupNavigation(){
+  document.querySelectorAll('.tab-item').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      const view = btn.dataset.view;
+      const target = document.getElementById('view-' + view);
+      if (!target){ console.warn('View tidak ada:', view); return; }
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      target.classList.add('active');
+      document.querySelectorAll('.tab-item').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      // Refresh saat buka dashboard
+      if (view === 'dashboard') { renderDashboard(); renderChart(); }
+      if (view === 'cashier') { renderProducts(); renderCart(); }
+      if (view === 'menu') { renderMenu(); }
+    });
+  });
+}
+
+/* ==========================================
+   INIT
+   ========================================== */
+document.addEventListener('DOMContentLoaded', async () => {
+  // ⚡ 1. Navigasi dipasang dulu — tab SELALU bisa dipindah
+  setupNavigation();
+  setupOtherEvents();
+  applyTheme(state.settings.Tema);
+
+  // ⚡ 2. Cek konfigurasi API
+  const apiStatusEl = document.getElementById('api-status');
+  if (!API_URL || API_URL.includes('XXXXX')){
+    state.apiReady = false;
+    if (apiStatusEl) apiStatusEl.innerHTML = '⚠️ <b>API_URL belum diset.</b> Ganti konstanta API_URL di dalam file ini dengan URL deployment Google Apps Script Anda.';
+    showToast('⚠️ API belum dikonfigurasi. Aplikasi jalan mode offline.', 5000);
+    renderAll();
+    return;
+  }
+
+  // ⚡ 3. Load data (tidak akan break navigasi meskipun gagal)
+  try{
+    await loadSettings();
+    await loadProducts();
+    await loadTransactions();
+    state.apiReady = true;
+    if (apiStatusEl) apiStatusEl.innerHTML = '✅ Terhubung ke Google Sheets API';
+  } catch(err){
+    console.error('Load error:', err);
+    if (apiStatusEl) apiStatusEl.innerHTML = '❌ Gagal terhubung: ' + err.message;
+    showToast('Gagal memuat data dari server.');
+  }
+
+  renderAll();
+});
+
+function renderAll(){
+  renderDashboard();
+  renderChart();
+  renderProducts();
+  renderCart();
+  renderMenu();
+}
+
+/* ==========================================
+   OTHER EVENT LISTENERS
+   ========================================== */
+function setupOtherEvents(){
+  // Payment method
+  document.querySelectorAll('.pay-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.paymentMethod = btn.dataset.method;
+    });
+  });
+
+  // Checkout
+  document.getElementById('checkout-btn').addEventListener('click', checkout);
+
+  // Save settings
+  document.getElementById('save-settings-btn').addEventListener('click', saveSettings);
+
+  // Add product
+  document.getElementById('add-product-btn').addEventListener('click', () => {
+    openProductModal();
+  });
+
+  // Chart switch
+  document.querySelectorAll('.chart-switch button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.chart-switch button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.chartRange = btn.dataset.range;
+      renderChart();
+    });
+  });
+}
+
+/* ==========================================
+   LOAD DATA
+   ========================================== */
+async function loadSettings(){
+  const res = await apiGet('getSettings');
+  if (res.success && res.data){
+    state.settings = { ...state.settings, ...res.data };
+    applyTheme(state.settings.Tema);
+    document.getElementById('store-name').textContent = state.settings.Nama_Toko || 'KasirKu';
+    document.getElementById('input-store-name').value = state.settings.Nama_Toko || '';
+    document.getElementById('select-theme').value = state.settings.Tema || 'light';
+  }
+}
+
+async function loadProducts(){
+  const res = await apiGet('getProducts');
+  if (res.success && Array.isArray(res.data)){
+    state.products = res.data.filter(p => String(p.Status||'Aktif').toLowerCase() === 'aktif');
+  }
+}
+
+async function loadTransactions(){
+  const res = await apiGet('getTransactions');
+  if (res.success && Array.isArray(res.data)){
+    state.transactions = res.data;
+  }
+}
+
+/* ==========================================
+   DASHBOARD
+   ========================================== */
+function renderDashboard(){
+  const today = new Date().toISOString().split('T')[0];
+  const todayTx = state.transactions.filter(tx => String(tx.Tanggal||'').startsWith(today));
+  const totalToday = todayTx.reduce((s, tx) => s + Number(tx.Total||0), 0);
+  const totalAll = state.transactions.reduce((s, tx) => s + Number(tx.Total||0), 0);
+
+  document.getElementById('stat-today').textContent = formatRupiah(totalToday);
+  document.getElementById('stat-tx-today').textContent = todayTx.length;
+  document.getElementById('stat-total').textContent = formatRupiah(totalAll);
+}
+
+function renderChart(){
+  const ctx = document.getElementById('salesChart').getContext('2d');
+  let labels = [], values = [], labelText = '';
+
+  if (state.chartRange === 'daily'){
+    // 7 hari terakhir
+    const dailyData = {};
+    state.transactions.forEach(tx => {
+      const day = String(tx.Tanggal||'').split('T')[0];
+      if (day) dailyData[day] = (dailyData[day]||0) + Number(tx.Total||0);
+    });
+    // Isi 7 hari terakhir termasuk yang kosong
+    const days = [];
+    for (let i=6; i>=0; i--){
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().split('T')[0];
+      days.push(key);
+    }
+    labels = days.map(d => d.slice(5));
+    values = days.map(d => dailyData[d] || 0);
+    labelText = 'Penjualan 7 Hari Terakhir';
+  } else {
+    // 6 bulan terakhir
+    const monthlyData = {};
+    state.transactions.forEach(tx => {
+      const m = String(tx.Tanggal||'').slice(0,7);
+      if (m) monthlyData[m] = (monthlyData[m]||0) + Number(tx.Total||0);
+    });
+    const months = [];
+    for (let i=5; i>=0; i--){
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      const key = d.toISOString().slice(0,7);
+      months.push(key);
+    }
+    const monthNames = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    labels = months.map(m => monthNames[parseInt(m.slice(5))-1] + ' ' + m.slice(2,4));
+    values = months.map(m => monthlyData[m] || 0);
+    labelText = 'Penjualan 6 Bulan Terakhir';
+  }
+
+  if (chartInstance) chartInstance.destroy();
+  chartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: labelText,
+        data: values,
+        backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#ff6b35',
+        borderRadius: 8,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { callback: v => 'Rp ' + v.toLocaleString('id-ID'), font: {size:10} }
+        },
+        x: { ticks: { font: {size:10} } }
+      }
+    }
+  });
+}
+
+/* ==========================================
+   PRODUK (KASIR)
+   ========================================== */
+function renderProducts(){
+  const c = document.getElementById('product-list');
+  if (!state.products.length){
+    c.innerHTML = '<div class="cart-empty" style="grid-column:1/-1;">Belum ada produk. Tambah di menu "Menu".</div>';
+    return;
+  }
+  c.innerHTML = state.products.map(p => `
+    <div class="product-card" data-id="${p.ID}" data-nama="${escapeHtml(p.Nama)}" data-harga="${p.Harga}">
+      <div class="p-name">${escapeHtml(p.Nama)}</div>
+      <div class="p-price">${formatRupiah(p.Harga)}</div>
+    </div>
+  `).join('');
+
+  c.querySelectorAll('.product-card').forEach(card => {
+    card.addEventListener('click', () => {
+      addToCart({
+        id: card.dataset.id,
+        nama: card.dataset.nama,
+        harga: Number(card.dataset.harga)
+      });
+    });
+  });
+}
+
+function addToCart({id, nama, harga}){
+  const existing = state.cart.find(i => i.id === id);
+  if (existing) existing.qty++;
+  else state.cart.push({id, nama, harga, qty:1});
+  renderCart();
+}
+
+function renderCart(){
+  const list = document.getElementById('cart-items');
+  if (!state.cart.length){
+    list.innerHTML = '<li class="cart-empty">Belum ada item</li>';
+  } else {
+    list.innerHTML = state.cart.map((item, idx) => `
+      <li>
+        <div class="cart-item-info">
+          <div>${escapeHtml(item.nama)}</div>
+          <div style="font-size:.75rem;color:var(--muted);">${formatRupiah(item.harga)} × ${item.qty} = ${formatRupiah(item.harga*item.qty)}</div>
+        </div>
+        <div class="cart-item-qty">
+          <button class="qty-btn" data-action="minus" data-idx="${idx}">−</button>
+          <span style="min-width:18px;text-align:center;font-weight:700;">${item.qty}</span>
+          <button class="qty-btn" data-action="plus" data-idx="${idx}">+</button>
+        </div>
+      </li>
+    `).join('');
+    
+    list.querySelectorAll('.qty-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = Number(btn.dataset.idx);
+        if (btn.dataset.action === 'plus') state.cart[idx].qty++;
+        else {
+          state.cart[idx].qty--;
+          if (state.cart[idx].qty <= 0) state.cart.splice(idx, 1);
+        }
+        renderCart();
+      });
+    });
+  }
+  
+  const total = state.cart.reduce((s, i) => s + i.harga * i.qty, 0);
+  document.getElementById('cart-total').textContent = formatRupiah(total);
+}
+
+/* ==========================================
+   CHECKOUT
+   ========================================== */
+async function checkout(){
+  if (!state.cart.length) return showToast('Keranjang kosong');
+  if (!state.apiReady) return showToast('API belum terhubung. Periksa konfigurasi API_URL.');
+
+  const total = state.cart.reduce((s, i) => s + i.harga * i.qty, 0);
+  const id = 'TRX' + Date.now();
+
+  const payload = {
+    ID_Transaksi: id,
+    Total: total,
+    Metode_Bayar: state.paymentMethod,
+    Detail_Item: state.cart.map(i => ({
+      id: i.id,
+      nama: i.nama,
+      harga: i.harga,   // ⚡ snapshot harga saat transaksi
+      qty: i.qty
+    }))
+  };
+
+  const res = await apiPost('saveTransaction', payload);
+  if (res.success){
+    showToast(`✅ ${state.paymentMethod} • ${formatRupiah(total)}`);
+    state.cart = [];
+    renderCart();
+    await loadTransactions();
+    renderDashboard();
+    renderChart();
+  } else {
+    showToast('Gagal: ' + (res.message || 'unknown'));
+  }
+}
+
+/* ==========================================
+   MENU (KELOLA PRODUK)
+   ========================================== */
+function renderMenu(){
+  const c = document.getElementById('menu-list');
+  if (!state.products.length){
+    c.innerHTML = '<div class="cart-empty">Belum ada produk. Klik "+ Tambah Produk".</div>';
+    return;
+  }
+  c.innerHTML = state.products.map(p => `
+    <div class="menu-item">
+      <div class="info">
+        <strong>${escapeHtml(p.Nama)}</strong>
+        <div class="price">${formatRupiah(p.Harga)}</div>
+      </div>
+      <div class="actions">
+        <button class="skeuo-btn" onclick="editProduct('${p.ID}')">✏️ Edit</button>
+        <button class="skeuo-btn danger" onclick="deleteProduct('${p.ID}')">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openProductModal(existing){
+  const isEdit = !!existing;
+  openModal(`
+    <h3>${isEdit ? '✏️ Edit Produk' : '+ Tambah Produk'}</h3>
+    <label style="font-size:.75rem;font-weight:700;color:var(--muted);margin-bottom:6px;display:block;text-transform:uppercase;letter-spacing:1px;">ID Produk</label>
+    <input type="text" id="modal-id" class="skeuo-input" value="${isEdit ? existing.ID : 'P' + Date.now()}" ${isEdit ? 'readonly' : ''}>
+    <label style="font-size:.75rem;font-weight:700;color:var(--muted);margin-bottom:6px;display:block;text-transform:uppercase;letter-spacing:1px;">Nama</label>
+    <input type="text" id="modal-nama" class="skeuo-input" value="${isEdit ? escapeHtml(existing.Nama) : ''}" placeholder="Contoh: Kopi Hitam">
+    <label style="font-size:.75rem;font-weight:700;color:var(--muted);margin-bottom:6px;display:block;text-transform:uppercase;letter-spacing:1px;">Harga (Rp)</label>
+    <input type="number" id="modal-harga" class="skeuo-input" value="${isEdit ? existing.Harga : ''}" placeholder="15000">
+    <label style="font-size:.75rem;font-weight:700;color:var(--muted);margin-bottom:6px;display:block;text-transform:uppercase;letter-spacing:1px;">Kategori</label>
+    <input type="text" id="modal-kategori" class="skeuo-input" value="${isEdit ? escapeHtml(existing.Kategori||'') : ''}" placeholder="Makanan / Minuman">
+    <div class="modal-actions">
+      <button class="skeuo-btn" onclick="closeModal()">Batal</button>
+      <button class="skeuo-btn accent" onclick="submitProduct(${isEdit})">Simpan</button>
+    </div>
+  `);
+}
+
+async function submitProduct(isEdit){
+  const data = {
+    ID: document.getElementById('modal-id').value.trim(),
+    Nama: document.getElementById('modal-nama').value.trim(),
+    Harga: Number(document.getElementById('modal-harga').value),
+    Kategori: document.getElementById('modal-kategori').value.trim(),
+    Status: 'Aktif'
+  };
+  if (!data.ID || !data.Nama || isNaN(data.Harga) || data.Harga <= 0){
+    return showToast('Lengkapi semua field dengan benar');
+  }
+  const res = await apiPost('saveProduct', data);
+  if (res.success){
+    showToast(isEdit ? '✅ Produk diperbarui' : '✅ Produk ditambahkan');
+    closeModal();
+    await loadProducts();
+    renderProducts();
+    renderMenu();
+  } else {
+    showToast('Gagal: ' + (res.message||'unknown'));
+  }
+}
+
+window.editProduct = function(id){
+  const p = state.products.find(x => x.ID === id);
+  if (p) openProductModal(p);
+};
+
+window.deleteProduct = async function(id){
+  if (!confirm('Hapus produk ini? Transaksi lama tidak terpengaruh.')) return;
+  const res = await apiPost('deleteProduct', { id });
+  if (res.success){
+    showToast('🗑️ Produk dihapus');
+    await loadProducts();
+    renderProducts();
+    renderMenu();
+  } else {
+    showToast('Gagal: ' + (res.message||'unknown'));
+  }
+};
+
+/* ==========================================
+   SETTINGS
+   ========================================== */
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
+}
+
+async function saveSettings(){
+  const nama = document.getElementById('input-store-name').value.trim();
+  const tema = document.getElementById('select-theme').value;
+  if (!nama) return showToast('Nama toko wajib diisi');
+
+  state.settings.Nama_Toko = nama;
+  state.settings.Tema = tema;
+  document.getElementById('store-name').textContent = nama;
+  applyTheme(tema);
+
+  if (state.apiReady){
+    const res = await apiPost('saveSettings', { Nama_Toko: nama, Tema: tema });
+    if (res.success) showToast('✅ Pengaturan disimpan');
+    else showToast('Gagal: ' + (res.message||'unknown'));
+  } else {
+    showToast('⚠️ Tersimpan lokal (API offline)');
+  }
+  renderChart(); // refresh warna chart sesuai tema
+}
+
+/* ==========================================
+   UTIL
+   ========================================== */
+function escapeHtml(s){
+  return String(s||'').replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+</script>
+</body>
+</html>
