@@ -21,13 +21,14 @@
   --card-bg:#1e222a;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;}
+/* FIX: hapus height:100% dari body supaya bisa tumbuh natural */
+html{height:100%;}
 body{
   font-family:var(--font); background:var(--bg); color:var(--text);
-  padding-bottom:110px; min-height:100vh; overflow-x:hidden;
+  padding-bottom:150px; min-height:100vh; overflow-x:hidden;
   transition:background .3s,color .3s;
 }
-/* ============ HEADER + CLOCK (diperkecil) ============ */
+/* ============ HEADER + CLOCK ============ */
 .app-header{padding:20px 16px 12px;text-align:center;}
 .app-header h1{font-size:1.8rem;font-weight:800;letter-spacing:-.5px;}
 .header-sub{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:2px;}
@@ -55,6 +56,24 @@ h3{font-size:1rem;margin-bottom:10px;}
   box-shadow:8px 8px 16px var(--shadow-dark),-8px -8px 16px var(--shadow-light);
   padding:20px;margin-bottom:16px;
 }
+/* Date picker bar */
+.date-bar{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 14px;margin-bottom:12px;
+  background:var(--card-bg);border-radius:12px;
+  box-shadow:6px 6px 12px var(--shadow-dark),-6px -6px 12px var(--shadow-light);
+}
+.date-bar label{
+  font-size:.7rem;color:var(--muted);font-weight:700;
+  text-transform:uppercase;letter-spacing:1px;white-space:nowrap;
+}
+.date-bar input[type="date"]{
+  flex:1;padding:8px 12px;border:none;border-radius:10px;
+  background:var(--card-bg);color:var(--text);
+  font-family:var(--font);font-size:.9rem;font-weight:600;
+  box-shadow:inset 3px 3px 6px var(--shadow-dark),inset -3px -3px 6px var(--shadow-light);
+}
+.date-bar input[type="date"]:focus{outline:2px solid var(--accent);}
 /* ============ DASHBOARD ============ */
 .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
 .stat-card{display:flex;flex-direction:column;gap:6px;}
@@ -182,7 +201,7 @@ select.skeuo-input{
 }
 .menu-item .actions{display:flex;gap:6px;}
 .menu-item .actions button{padding:8px 10px;font-size:.75rem;}
-/* ============ FLOATING NOTCH TAB BAR (dioptimalkan untuk 5 tab) ============ */
+/* ============ FLOATING NOTCH TAB BAR (5 tab) ============ */
 .floating-tab-bar{
   position:fixed;bottom:18px;left:50%;transform:translateX(-50%);
   width:calc(100% - 32px);max-width:420px;height:70px;
@@ -253,7 +272,7 @@ select.skeuo-input{
 .sold-name{font-weight:600;font-size:.9rem;line-height:1.2;}
 .sold-meta{font-size:.72rem;color:var(--muted);margin-top:2px;}
 .sold-total{font-weight:700;color:var(--accent);font-size:.85rem;white-space:nowrap;}
-/* ============ CASH PAYMENT (Kembalian diperbesar) ============ */
+/* ============ CASH PAYMENT ============ */
 .cash-total-box{
   display:flex;justify-content:space-between;font-weight:800;font-size:1.05rem;
   margin-bottom:16px;padding:12px 14px;background:var(--card-bg);border-radius:10px;
@@ -328,9 +347,16 @@ select.skeuo-input{
   <!-- ============ DASHBOARD ============ -->
   <section id="view-dashboard" class="view active">
     <h2>Dashboard</h2>
+
+    <!-- Date picker dashboard -->
+    <div class="date-bar">
+      <label for="dashboard-date">Tanggal</label>
+      <input type="date" id="dashboard-date">
+    </div>
+
     <div class="stats-grid">
       <div class="stat-card skeuo-card">
-        <span class="stat-label">Hari Ini</span>
+        <span class="stat-label" id="stat-today-label">Hari Ini</span>
         <span class="stat-value" id="stat-today">Rp 0</span>
       </div>
       <div class="stat-card skeuo-card clickable" id="stat-tx-card" title="Ketuk untuk detail produk terjual">
@@ -357,6 +383,13 @@ select.skeuo-input{
   <!-- ============ KASIR ============ -->
   <section id="view-cashier" class="view">
     <h2>Kasir</h2>
+
+    <!-- Date picker kasir -->
+    <div class="date-bar">
+      <label for="cashier-date">Tgl Jual</label>
+      <input type="date" id="cashier-date">
+    </div>
+
     <div class="kasir-cat-tabs">
       <button class="kasir-cat-tab active" data-cat="all">Semua</button>
       <button class="kasir-cat-tab" data-cat="Makanan">Makanan</button>
@@ -477,6 +510,8 @@ const state = {
   purchases: [],
   chartRange: 'daily',
   kasirCat: 'all',
+  cashierDate: '',
+  dashboardDate: '',
   apiReady: false
 };
 
@@ -653,6 +688,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   applyTheme(state.settings.Tema);
   applyAccent(state.settings.Accent);
 
+  // Init tanggal default = hari ini
+  const today = localDateKey(new Date());
+  state.cashierDate = today;
+  state.dashboardDate = today;
+  const cdEl = document.getElementById('cashier-date');
+  const ddEl = document.getElementById('dashboard-date');
+  if (cdEl) cdEl.value = today;
+  if (ddEl) ddEl.value = today;
+
   const apiStatusEl = document.getElementById('api-status');
   if (!API_URL || API_URL.includes('XXXXX')){
     state.apiReady = false;
@@ -733,15 +777,35 @@ function setupOtherEvents(){
     state.settings.Accent = e.target.value;
     applyAccent(e.target.value);
   });
+
+  // Date picker dashboard
+  const dashDateEl = document.getElementById('dashboard-date');
+  if (dashDateEl) {
+    dashDateEl.addEventListener('change', (e) => {
+      const val = e.target.value || localDateKey(new Date());
+      state.dashboardDate = val;
+      if (e.target.value !== val) e.target.value = val;
+      renderDashboard();
+      renderChart();
+    });
+  }
+
+  // Date picker kasir
+  const cashierDateEl = document.getElementById('cashier-date');
+  if (cashierDateEl) {
+    cashierDateEl.addEventListener('change', (e) => {
+      const val = e.target.value || localDateKey(new Date());
+      state.cashierDate = val;
+      if (e.target.value !== val) e.target.value = val;
+    });
+  }
 }
 
 function updateTxCardHint(){
   const hint = document.querySelector('#stat-tx-card .stat-hint');
-  if (hint){
-    hint.textContent = state.chartRange === 'daily'
-      ? 'Ketuk untuk produk hari ini →'
-      : 'Ketuk untuk produk bulan ini →';
-  }
+  if (!hint) return;
+  const isToday = state.dashboardDate === localDateKey(new Date());
+  hint.textContent = isToday ? 'Ketuk untuk detail hari ini →' : 'Ketuk untuk detail tgl ini →';
 }
 
 /* ==========================================
@@ -785,25 +849,27 @@ async function loadPurchases(){
    DASHBOARD
    ========================================== */
 function renderDashboard(){
-  const todayTx = state.transactions.filter(tx => isSameLocalDay(String(tx.Tanggal||'')));
-  const totalToday = todayTx.reduce((s, tx) => s + Number(tx.Total||0), 0);
+  const selectedDate = state.dashboardDate || localDateKey(new Date());
+  const dayTx = state.transactions.filter(tx => localDateKey(String(tx.Tanggal||'')) === selectedDate);
+  const totalDay = dayTx.reduce((s, tx) => s + Number(tx.Total||0), 0);
   const totalAll = state.transactions.reduce((s, tx) => s + Number(tx.Total||0), 0);
 
-  document.getElementById('stat-today').textContent = formatRupiah(totalToday);
-  document.getElementById('stat-tx-today').textContent = todayTx.length;
+  document.getElementById('stat-today').textContent = formatRupiah(totalDay);
+  document.getElementById('stat-tx-today').textContent = dayTx.length;
   document.getElementById('stat-total').textContent = formatRupiah(totalAll);
+
+  const isToday = selectedDate === localDateKey(new Date());
+  const lbl = document.getElementById('stat-today-label');
+  if (lbl) lbl.textContent = isToday ? 'Hari Ini' : 'Tgl Dipilih';
+
   updateTxCardHint();
 }
 
 /* ==========================================
-   DETAIL PRODUK TERJUAL
+   DETAIL PRODUK TERJUAL (per tanggal)
    ========================================== */
-function getSoldProducts(range){
-  const txs = state.transactions.filter(tx => {
-    const tgl = String(tx.Tanggal || '');
-    return range === 'daily' ? isSameLocalDay(tgl) : isSameLocalMonth(tgl);
-  });
-
+function getSoldProductsForDate(dateKey){
+  const txs = state.transactions.filter(tx => localDateKey(String(tx.Tanggal || '')) === dateKey);
   const agg = {};
   txs.forEach(tx => {
     let items = tx.Detail_Item;
@@ -824,18 +890,18 @@ function getSoldProducts(range){
 }
 
 function openSalesDetailModal(){
-  const range = state.chartRange;
-  const label = range === 'daily' ? 'Hari Ini' : 'Bulan Ini';
-  const products = getSoldProducts(range);
+  const selectedDate = state.dashboardDate || localDateKey(new Date());
+  const isToday = selectedDate === localDateKey(new Date());
+  const label = isToday
+    ? 'Hari Ini'
+    : new Date(selectedDate + 'T12:00:00').toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'});
 
-  const txsCount = state.transactions.filter(tx => {
-    const tgl = String(tx.Tanggal || '');
-    return range === 'daily' ? isSameLocalDay(tgl) : isSameLocalMonth(tgl);
-  }).length;
+  const products = getSoldProductsForDate(selectedDate);
+  const txsCount = state.transactions.filter(tx => localDateKey(String(tx.Tanggal || '')) === selectedDate).length;
 
   if (!products.length){
     const msg = txsCount > 0
-      ? `Ada ${txsCount} transaksi ${label.toLowerCase()}, tapi detail item kosong.<br><small style="color:var(--muted)">Kemungkinan transaksi lama tersimpan sebelum fix header. Coba transaksi baru.</small>`
+      ? `Ada ${txsCount} transaksi ${label.toLowerCase()}, tapi detail item kosong.<br><small style="color:var(--muted)">Kemungkinan transaksi lama tersimpan sebelum fix header.</small>`
       : `Belum ada transaksi ${label.toLowerCase()}.`;
     openModal(`
       <h3>📦 Produk Terjual ${label}</h3>
@@ -874,10 +940,13 @@ function openSalesDetailModal(){
 }
 
 /* ==========================================
-   CHART
+   CHART (anchor ke dashboardDate)
    ========================================== */
 function renderChart(){
   const ctx = document.getElementById('salesChart').getContext('2d');
+  const anchor = state.dashboardDate
+    ? new Date(state.dashboardDate + 'T12:00:00')
+    : new Date();
   let labels = [], values = [], labelText = '';
 
   if (state.chartRange === 'daily'){
@@ -888,7 +957,7 @@ function renderChart(){
     });
     const days = [];
     for (let i=6; i>=0; i--){
-      const d = new Date();
+      const d = new Date(anchor);
       d.setDate(d.getDate() - i);
       days.push(localDateKey(d));
     }
@@ -903,7 +972,7 @@ function renderChart(){
     });
     const months = [];
     for (let i=5; i>=0; i--){
-      const d = new Date();
+      const d = new Date(anchor);
       d.setMonth(d.getMonth() - i);
       months.push(localMonthKey(d));
     }
@@ -1080,8 +1149,16 @@ function openCashPaymentModal(total){
 async function finalizeCheckout(total, cashPaid){
   showLoading('Menyimpan transaksi...');
   const id = 'TRX' + Date.now();
+  const now = new Date();
+  const timeStr = String(now.getHours()).padStart(2,'0') + ':' +
+                  String(now.getMinutes()).padStart(2,'0') + ':' +
+                  String(now.getSeconds()).padStart(2,'0');
+  const saleDate = state.cashierDate || localDateKey(now);
+  const tanggalIso = new Date(saleDate + 'T' + timeStr).toISOString();
+
   const payload = {
     ID_Transaksi: id,
+    Tanggal: tanggalIso,
     Total: total,
     Metode_Bayar: state.paymentMethod,
     Detail_Item: state.cart.map(i => ({ id: i.id, nama: i.nama, harga: i.harga, qty: i.qty }))
@@ -1164,7 +1241,6 @@ async function submitProduct(isEdit){
     Status: 'Aktif'
   };
 
-  // ⚡ Validasi: kategori wajib dipilih
   if (!data.Kategori){
     const sel = document.getElementById('modal-kategori');
     sel.classList.add('error');
@@ -1272,7 +1348,7 @@ function openPurchaseModal(existing){
     <label>Satuan</label>
     <select id="purchase-satuan" class="skeuo-input">
       <option value="" disabled ${!isEdit || !existing.Satuan ? 'selected' : ''}>— Pilih Satuan —</option>
-      ${['kg','liter','bks','pcs','pack','box','dus','karung','lusin','karton','botol'].map(s =>
+      ${['kg','gram','liter','ml','pcs','pack','box','dus','karung','karton','botol'].map(s =>
         `<option value="${s}" ${isEdit && existing.Satuan === s ? 'selected' : ''}>${s}</option>`
       ).join('')}
     </select>
@@ -1294,6 +1370,7 @@ function openPurchaseModal(existing){
     if (totalEl.value !== f) totalEl.value = f;
   });
 }
+
 async function submitPurchase(isEdit, id){
   const nama = document.getElementById('purchase-nama').value.trim();
   const tglStr = document.getElementById('purchase-tanggal').value;
@@ -1309,7 +1386,6 @@ async function submitPurchase(isEdit, id){
   if (qty <= 0) return showToast('⚠️ Qty harus lebih dari 0');
   if (total <= 0) return showToast('⚠️ Total harga harus lebih dari 0');
 
-  // Simpan sebagai ISO (lokal jam 12 siang supaya aman dari pergeseran TZ)
   const tanggalIso = new Date(tglStr + 'T12:00:00').toISOString();
 
   const payload = {
