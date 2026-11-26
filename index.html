@@ -56,7 +56,7 @@ h3{font-size:1rem;margin-bottom:10px;}
   padding:20px;margin-bottom:16px;
 }
 /* ============ DASHBOARD ============ */
-.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
 .stat-card{display:flex;flex-direction:column;gap:6px;}
 .stat-label{font-size:.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);}
 .stat-value{font-size:1.35rem;font-weight:800;color:var(--accent);}
@@ -182,14 +182,14 @@ select.skeuo-input{
 }
 .menu-item .actions{display:flex;gap:6px;}
 .menu-item .actions button{padding:8px 10px;font-size:.75rem;}
-/* ============ FLOATING NOTCH TAB BAR ============ */
+/* ============ FLOATING NOTCH TAB BAR (dioptimalkan untuk 5 tab) ============ */
 .floating-tab-bar{
   position:fixed;bottom:18px;left:50%;transform:translateX(-50%);
   width:calc(100% - 32px);max-width:420px;height:70px;
   background:var(--card-bg);border-radius:24px;
   box-shadow:0 8px 32px rgba(0,0,0,.15),inset 0 1px 0 rgba(255,255,255,.6);
   display:flex;align-items:center;justify-content:space-around;
-  padding:0 8px;z-index:1000;
+  padding:0 4px;z-index:1000;
 }
 .tab-bar-notch{
   position:absolute;top:-12px;left:50%;transform:translateX(-50%);
@@ -201,10 +201,10 @@ select.skeuo-input{
 .tab-item{
   position:relative;z-index:2;background:none;border:none;
   display:flex;flex-direction:column;align-items:center;gap:2px;
-  color:var(--muted);cursor:pointer;padding:8px 12px;border-radius:14px;
-  transition:all .2s;font-size:1.3rem;
+  color:var(--muted);cursor:pointer;padding:8px 6px;border-radius:14px;
+  transition:all .2s;font-size:1.15rem;flex:1;
 }
-.tab-item span{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+.tab-item span{font-size:.55rem;font-weight:700;text-transform:uppercase;letter-spacing:.3px;}
 .tab-item.active{
   color:var(--accent);
   box-shadow:inset 3px 3px 6px var(--shadow-dark),inset -3px -3px 6px var(--shadow-light);
@@ -302,7 +302,7 @@ select.skeuo-input{
   .product-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));}
   .floating-tab-bar{width:420px;}
 }
-  @keyframes shake{
+@keyframes shake{
   0%,100%{transform:translateX(0);}
   25%{transform:translateX(-6px);}
   75%{transform:translateX(6px);}
@@ -385,6 +385,29 @@ select.skeuo-input{
     <div id="menu-list"></div>
   </section>
 
+  <!-- ============ PEMBELIAN BAHAN BAKU ============ -->
+  <section id="view-purchase" class="view">
+    <h2>Pembelian Bahan Baku</h2>
+
+    <div class="stats-grid">
+      <div class="stat-card skeuo-card">
+        <span class="stat-label">Hari Ini</span>
+        <span class="stat-value" id="stat-purchase-today">Rp 0</span>
+      </div>
+      <div class="stat-card skeuo-card">
+        <span class="stat-label">Bulan Ini</span>
+        <span class="stat-value" id="stat-purchase-month">Rp 0</span>
+      </div>
+      <div class="stat-card skeuo-card" style="grid-column:span 2;">
+        <span class="stat-label">Total Keseluruhan</span>
+        <span class="stat-value" id="stat-purchase-total">Rp 0</span>
+      </div>
+    </div>
+
+    <button class="skeuo-btn accent block" id="add-purchase-btn" style="margin-bottom:16px;">+ Catat Pembelian</button>
+    <div id="purchase-list"></div>
+  </section>
+
   <!-- ============ PENGATURAN ============ -->
   <section id="view-settings" class="view">
     <h2>Pengaturan</h2>
@@ -423,6 +446,7 @@ select.skeuo-input{
   <button class="tab-item active" data-view="dashboard">📊<span>Dashboard</span></button>
   <button class="tab-item" data-view="cashier">🛒<span>Kasir</span></button>
   <button class="tab-item" data-view="menu">📋<span>Menu</span></button>
+  <button class="tab-item" data-view="purchase">📦<span>Bahan</span></button>
   <button class="tab-item" data-view="settings">⚙️<span>Atur</span></button>
 </nav>
 
@@ -450,6 +474,7 @@ const state = {
   paymentMethod: 'Tunai',
   settings: { Nama_Toko: 'KasirKu', Tema: 'light', Accent: '#ff6b35' },
   transactions: [],
+  purchases: [],
   chartRange: 'daily',
   kasirCat: 'all',
   apiReady: false
@@ -612,6 +637,7 @@ function setupNavigation(){
       if (view === 'dashboard') { renderDashboard(); renderChart(); }
       if (view === 'cashier') { renderProducts(); renderCart(); }
       if (view === 'menu') { renderMenu(); }
+      if (view === 'purchase') { renderPurchases(); }
       if (view === 'settings') { syncSettingsUI(); }
     });
   });
@@ -640,6 +666,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadSettings();
     await loadProducts();
     await loadTransactions();
+    await loadPurchases();
     state.apiReady = true;
     if (apiStatusEl) apiStatusEl.innerHTML = '✅ Created By : Awal';
   } catch(err){
@@ -655,6 +682,7 @@ function renderAll(){
   renderProducts();
   renderCart();
   renderMenu();
+  renderPurchases();
 }
 
 /* ==========================================
@@ -673,6 +701,7 @@ function setupOtherEvents(){
   document.getElementById('save-settings-btn').addEventListener('click', saveSettings);
   document.getElementById('add-product-btn').addEventListener('click', () => openProductModal());
   document.getElementById('stat-tx-card').addEventListener('click', openSalesDetailModal);
+  document.getElementById('add-purchase-btn').addEventListener('click', () => openPurchaseModal());
 
   document.querySelectorAll('.chart-switch button').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -743,6 +772,12 @@ async function loadTransactions(){
   const res = await apiGet('getTransactions');
   if (res.success && Array.isArray(res.data)){
     state.transactions = res.data;
+  }
+}
+async function loadPurchases(){
+  const res = await apiGet('getPembelian');
+  if (res.success && Array.isArray(res.data)){
+    state.purchases = res.data;
   }
 }
 
@@ -1129,14 +1164,14 @@ async function submitProduct(isEdit){
     Status: 'Aktif'
   };
 
- // ⚡ Validasi: kategori wajib dipilih
-if (!data.Kategori){
-  const sel = document.getElementById('modal-kategori');
-  sel.classList.add('error');
-  sel.focus();
-  setTimeout(() => sel.classList.remove('error'), 1000);
-  return showToast('⚠️ Kategori wajib dipilih');
-}
+  // ⚡ Validasi: kategori wajib dipilih
+  if (!data.Kategori){
+    const sel = document.getElementById('modal-kategori');
+    sel.classList.add('error');
+    sel.focus();
+    setTimeout(() => sel.classList.remove('error'), 1000);
+    return showToast('⚠️ Kategori wajib dipilih');
+  }
 
   if (!data.ID || !data.Nama || isNaN(data.Harga) || data.Harga <= 0){
     return showToast('Lengkapi semua field dengan benar');
@@ -1174,6 +1209,165 @@ window.deleteProduct = async function(id){
       renderMenu();
     } else {
       showToast('Gagal: ' + (res.message||'unknown'));
+    }
+  } finally { hideLoading(); }
+};
+
+/* ==========================================
+   PEMBELIAN BAHAN BAKU
+   ========================================== */
+function renderPurchases(){
+  const c = document.getElementById('purchase-list');
+  if (!c) return;
+
+  const today = state.purchases.filter(p => isSameLocalDay(String(p.Tanggal||'')));
+  const month = state.purchases.filter(p => isSameLocalMonth(String(p.Tanggal||'')));
+  document.getElementById('stat-purchase-today').textContent = formatRupiah(today.reduce((s,p)=>s+Number(p.Total||0),0));
+  document.getElementById('stat-purchase-month').textContent = formatRupiah(month.reduce((s,p)=>s+Number(p.Total||0),0));
+  document.getElementById('stat-purchase-total').textContent = formatRupiah(state.purchases.reduce((s,p)=>s+Number(p.Total||0),0));
+
+  if (!state.purchases.length){
+    c.innerHTML = '<div class="cart-empty">Belum ada catatan pembelian bahan. Klik "+ Catat Pembelian".</div>';
+    return;
+  }
+
+  const sorted = [...state.purchases].sort((a,b)=> new Date(b.Tanggal) - new Date(a.Tanggal));
+
+  c.innerHTML = sorted.map(p => {
+    const tgl = new Date(p.Tanggal);
+    const tglStr = isNaN(tgl) ? '-' : tgl.toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'});
+    const qtyDisplay = Number(p.Qty) % 1 === 0 ? Number(p.Qty) : Number(p.Qty).toFixed(2);
+    return `
+      <div class="menu-item">
+        <div class="info">
+          <strong>${escapeHtml(p.Nama_Bahan)}</strong>
+          <div class="price">${formatRupiah(p.Total)}</div>
+          <span class="cat-tag">${qtyDisplay} ${escapeHtml(p.Satuan||'')} × ${formatRupiah(p.Harga_Satuan)}</span>
+          <span class="cat-tag" style="margin-left:6px;">${tglStr}</span>
+          ${p.Supplier ? `<span class="cat-tag" style="margin-left:6px;">${escapeHtml(p.Supplier)}</span>` : ''}
+        </div>
+        <div class="actions">
+          <button class="skeuo-btn" onclick="editPurchase('${p.ID}')">✏️</button>
+          <button class="skeuo-btn danger" onclick="deletePurchase('${p.ID}')">🗑️</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openPurchaseModal(existing){
+  const isEdit = !!existing;
+  const todayStr = localDateKey(new Date());
+  const tglValue = isEdit ? localDateKey(existing.Tanggal) : todayStr;
+  const qtyValue = isEdit ? existing.Qty : '';
+
+  openModal(`
+    <h3>${isEdit ? '✏️ Edit Pembelian' : '+ Catat Pembelian Bahan'}</h3>
+    <label>Nama Bahan</label>
+    <input type="text" id="purchase-nama" class="skeuo-input" value="${isEdit ? escapeHtml(existing.Nama_Bahan) : ''}" placeholder="Contoh: Gula Pasir">
+    <label>Tanggal</label>
+    <input type="date" id="purchase-tanggal" class="skeuo-input" value="${tglValue}">
+    <label>Qty</label>
+    <input type="text" id="purchase-qty" class="skeuo-input" inputmode="decimal" value="${qtyValue}" placeholder="Contoh: 5 atau 2.5">
+    <label>Satuan</label>
+    <select id="purchase-satuan" class="skeuo-input">
+      <option value="" disabled ${!isEdit || !existing.Satuan ? 'selected' : ''}>— Pilih Satuan —</option>
+      ${['kg','gram','liter','ml','pcs','pack','box','dus','karung','karton','botol'].map(s =>
+        `<option value="${s}" ${isEdit && existing.Satuan === s ? 'selected' : ''}>${s}</option>`
+      ).join('')}
+    </select>
+    <label>Harga Satuan (Rp)</label>
+    <input type="text" id="purchase-harga" class="skeuo-input" inputmode="numeric" value="${isEdit ? formatNumberInput(existing.Harga_Satuan) : ''}" placeholder="0">
+    <label>Total (otomatis)</label>
+    <input type="text" id="purchase-total-preview" class="skeuo-input" readonly value="Rp 0" style="background:rgba(0,0,0,0.04);font-weight:800;color:var(--accent);">
+    <label>Supplier (opsional)</label>
+    <input type="text" id="purchase-supplier" class="skeuo-input" value="${isEdit ? escapeHtml(existing.Supplier || '') : ''}" placeholder="Nama supplier">
+    <label>Catatan (opsional)</label>
+    <input type="text" id="purchase-catatan" class="skeuo-input" value="${isEdit ? escapeHtml(existing.Catatan || '') : ''}" placeholder="Catatan tambahan">
+    <div class="modal-actions">
+      <button class="skeuo-btn" onclick="closeModal()">Batal</button>
+      <button class="skeuo-btn accent" onclick="submitPurchase(${isEdit}, '${isEdit ? existing.ID : ''}')">Simpan</button>
+    </div>
+  `);
+
+  const qtyEl = document.getElementById('purchase-qty');
+  const hargaEl = document.getElementById('purchase-harga');
+  const previewEl = document.getElementById('purchase-total-preview');
+
+  function updatePreview(){
+    const qty = parseFloat(String(qtyEl.value).replace(',', '.')) || 0;
+    const harga = parseNumberInput(hargaEl.value);
+    previewEl.value = formatRupiah(qty * harga);
+  }
+  qtyEl.addEventListener('input', updatePreview);
+  hargaEl.addEventListener('input', () => {
+    const f = formatNumberInput(hargaEl.value);
+    if (hargaEl.value !== f) hargaEl.value = f;
+    updatePreview();
+  });
+  updatePreview();
+}
+
+async function submitPurchase(isEdit, id){
+  const nama = document.getElementById('purchase-nama').value.trim();
+  const tglStr = document.getElementById('purchase-tanggal').value;
+  const qty = parseFloat(String(document.getElementById('purchase-qty').value).replace(',', '.')) || 0;
+  const satuan = document.getElementById('purchase-satuan').value;
+  const harga = parseNumberInput(document.getElementById('purchase-harga').value);
+  const supplier = document.getElementById('purchase-supplier').value.trim();
+  const catatan = document.getElementById('purchase-catatan').value.trim();
+
+  if (!nama) return showToast('⚠️ Nama bahan wajib diisi');
+  if (!tglStr) return showToast('⚠️ Tanggal wajib diisi');
+  if (!satuan) return showToast('⚠️ Satuan wajib dipilih');
+  if (qty <= 0) return showToast('⚠️ Qty harus lebih dari 0');
+  if (harga <= 0) return showToast('⚠️ Harga satuan harus lebih dari 0');
+
+  // Simpan sebagai ISO (lokal jam 12 siang supaya aman dari pergeseran TZ)
+  const tanggalIso = new Date(tglStr + 'T12:00:00').toISOString();
+
+  const payload = {
+    ID: isEdit ? id : 'PB' + Date.now(),
+    Tanggal: tanggalIso,
+    Nama_Bahan: nama,
+    Qty: qty,
+    Satuan: satuan,
+    Harga_Satuan: harga,
+    Total: qty * harga,
+    Supplier: supplier,
+    Catatan: catatan
+  };
+
+  showLoading(isEdit ? 'Menyimpan perubahan...' : 'Menyimpan pembelian...');
+  try {
+    const res = await apiPost('savePembelian', payload);
+    if (res.success){
+      showToast(isEdit ? '✅ Pembelian diperbarui' : '✅ Pembelian dicatat');
+      closeModal();
+      await loadPurchases();
+      renderPurchases();
+    } else {
+      showToast('Gagal: ' + (res.message || 'unknown'));
+    }
+  } finally { hideLoading(); }
+}
+
+window.editPurchase = function(id){
+  const p = state.purchases.find(x => String(x.ID) === String(id));
+  if (p) openPurchaseModal(p);
+};
+
+window.deletePurchase = async function(id){
+  if (!confirm('Hapus catatan pembelian ini?')) return;
+  showLoading('Menghapus...');
+  try {
+    const res = await apiGet('deletePembelian', { id });
+    if (res.success){
+      showToast('🗑️ Pembelian dihapus');
+      await loadPurchases();
+      renderPurchases();
+    } else {
+      showToast('Gagal: ' + (res.message || 'unknown'));
     }
   } finally { hideLoading(); }
 };
