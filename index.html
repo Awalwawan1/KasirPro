@@ -359,8 +359,8 @@ select.skeuo-input{
     <h2>Kasir</h2>
     <div class="kasir-cat-tabs">
       <button class="kasir-cat-tab active" data-cat="all">Semua</button>
-      <button class="kasir-cat-tab" data-cat="Makanan">🍔 Makanan</button>
-      <button class="kasir-cat-tab" data-cat="Minuman">🥤 Minuman</button>
+      <button class="kasir-cat-tab" data-cat="Makanan">Makanan</button>
+      <button class="kasir-cat-tab" data-cat="Minuman">Minuman</button>
     </div>
     <div class="product-grid" id="product-list"></div>
     <div class="skeuo-card" id="cart-panel">
@@ -1264,11 +1264,11 @@ function openPurchaseModal(existing){
   openModal(`
     <h3>${isEdit ? '✏️ Edit Pembelian' : '+ Catat Pembelian Bahan'}</h3>
     <label>Nama Bahan</label>
-    <input type="text" id="purchase-nama" class="skeuo-input" value="${isEdit ? escapeHtml(existing.Nama_Bahan) : ''}" placeholder="Contoh: Gula Pasir">
+    <input type="text" id="purchase-nama" class="skeuo-input" value="${isEdit ? escapeHtml(existing.Nama_Bahan) : ''}" placeholder="Input Nama Bahan">
     <label>Tanggal</label>
     <input type="date" id="purchase-tanggal" class="skeuo-input" value="${tglValue}">
     <label>Qty</label>
-    <input type="text" id="purchase-qty" class="skeuo-input" inputmode="decimal" value="${qtyValue}" placeholder="Contoh: 5 atau 2.5">
+    <input type="text" id="purchase-qty" class="skeuo-input" inputmode="decimal" value="${qtyValue}" placeholder="Input Jumlah Bahan Yang Dibeli">
     <label>Satuan</label>
     <select id="purchase-satuan" class="skeuo-input">
       <option value="" disabled ${!isEdit || !existing.Satuan ? 'selected' : ''}>— Pilih Satuan —</option>
@@ -1281,7 +1281,7 @@ function openPurchaseModal(existing){
     <label>Total (otomatis)</label>
     <input type="text" id="purchase-total-preview" class="skeuo-input" readonly value="Rp 0" style="background:rgba(0,0,0,0.04);font-weight:800;color:var(--accent);">
     <label>Supplier (opsional)</label>
-    <input type="text" id="purchase-supplier" class="skeuo-input" value="${isEdit ? escapeHtml(existing.Supplier || '') : ''}" placeholder="Nama supplier">
+    <input type="text" id="purchase-supplier" class="skeuo-input" value="${isEdit ? escapeHtml(existing.Supplier || '') : ''}" placeholder="Input Tempat Beli Bahan">
     <label>Catatan (opsional)</label>
     <input type="text" id="purchase-catatan" class="skeuo-input" value="${isEdit ? escapeHtml(existing.Catatan || '') : ''}" placeholder="Catatan tambahan">
     <div class="modal-actions">
