@@ -1272,7 +1272,7 @@ function openPurchaseModal(existing){
     <label>Satuan</label>
     <select id="purchase-satuan" class="skeuo-input">
       <option value="" disabled ${!isEdit || !existing.Satuan ? 'selected' : ''}>— Pilih Satuan —</option>
-      ${['kg','gram','liter','ml','pcs','pack','box','dus','karung','karton','botol'].map(s =>
+      ${['kg','liter','bks','pcs','pack','box','dus','karung','lusin','karton','botol'].map(s =>
         `<option value="${s}" ${isEdit && existing.Satuan === s ? 'selected' : ''}>${s}</option>`
       ).join('')}
     </select>
