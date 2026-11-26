@@ -1242,7 +1242,7 @@ function renderPurchases(){
         <div class="info">
           <strong>${escapeHtml(p.Nama_Bahan)}</strong>
           <div class="price">${formatRupiah(p.Total)}</div>
-          <span class="cat-tag">${qtyDisplay} ${escapeHtml(p.Satuan||'')} × ${formatRupiah(p.Harga_Satuan)}</span>
+          <span class="cat-tag">${qtyDisplay} ${escapeHtml(p.Satuan||'')}</span>
           <span class="cat-tag" style="margin-left:6px;">${tglStr}</span>
           ${p.Supplier ? `<span class="cat-tag" style="margin-left:6px;">${escapeHtml(p.Supplier)}</span>` : ''}
         </div>
@@ -1276,10 +1276,8 @@ function openPurchaseModal(existing){
         `<option value="${s}" ${isEdit && existing.Satuan === s ? 'selected' : ''}>${s}</option>`
       ).join('')}
     </select>
-    <label>Harga Satuan (Rp)</label>
-    <input type="text" id="purchase-harga" class="skeuo-input" inputmode="numeric" value="${isEdit ? formatNumberInput(existing.Harga_Satuan) : ''}" placeholder="0">
-    <label>Total (otomatis)</label>
-    <input type="text" id="purchase-total-preview" class="skeuo-input" readonly value="Rp 0" style="background:rgba(0,0,0,0.04);font-weight:800;color:var(--accent);">
+    <label>Total Harga (Rp)</label>
+    <input type="text" id="purchase-total" class="skeuo-input" inputmode="numeric" value="${isEdit ? formatNumberInput(existing.Total) : ''}" placeholder="0">
     <label>Supplier (opsional)</label>
     <input type="text" id="purchase-supplier" class="skeuo-input" value="${isEdit ? escapeHtml(existing.Supplier || '') : ''}" placeholder="Input Tempat Beli Bahan">
     <label>Catatan (opsional)</label>
@@ -1290,9 +1288,12 @@ function openPurchaseModal(existing){
     </div>
   `);
 
-  const qtyEl = document.getElementById('purchase-qty');
-  const hargaEl = document.getElementById('purchase-harga');
-  const previewEl = document.getElementById('purchase-total-preview');
+  const totalEl = document.getElementById('purchase-total');
+  totalEl.addEventListener('input', () => {
+    const f = formatNumberInput(totalEl.value);
+    if (totalEl.value !== f) totalEl.value = f;
+  });
+}
 
   function updatePreview(){
     const qty = parseFloat(String(qtyEl.value).replace(',', '.')) || 0;
@@ -1313,7 +1314,7 @@ async function submitPurchase(isEdit, id){
   const tglStr = document.getElementById('purchase-tanggal').value;
   const qty = parseFloat(String(document.getElementById('purchase-qty').value).replace(',', '.')) || 0;
   const satuan = document.getElementById('purchase-satuan').value;
-  const harga = parseNumberInput(document.getElementById('purchase-harga').value);
+  const total = parseNumberInput(document.getElementById('purchase-total').value);
   const supplier = document.getElementById('purchase-supplier').value.trim();
   const catatan = document.getElementById('purchase-catatan').value.trim();
 
@@ -1321,7 +1322,7 @@ async function submitPurchase(isEdit, id){
   if (!tglStr) return showToast('⚠️ Tanggal wajib diisi');
   if (!satuan) return showToast('⚠️ Satuan wajib dipilih');
   if (qty <= 0) return showToast('⚠️ Qty harus lebih dari 0');
-  if (harga <= 0) return showToast('⚠️ Harga satuan harus lebih dari 0');
+  if (total <= 0) return showToast('⚠️ Total harga harus lebih dari 0');
 
   // Simpan sebagai ISO (lokal jam 12 siang supaya aman dari pergeseran TZ)
   const tanggalIso = new Date(tglStr + 'T12:00:00').toISOString();
@@ -1332,8 +1333,7 @@ async function submitPurchase(isEdit, id){
     Nama_Bahan: nama,
     Qty: qty,
     Satuan: satuan,
-    Harga_Satuan: harga,
-    Total: qty * harga,
+    Total: total,
     Supplier: supplier,
     Catatan: catatan
   };
