@@ -1294,21 +1294,6 @@ function openPurchaseModal(existing){
     if (totalEl.value !== f) totalEl.value = f;
   });
 }
-
-  function updatePreview(){
-    const qty = parseFloat(String(qtyEl.value).replace(',', '.')) || 0;
-    const harga = parseNumberInput(hargaEl.value);
-    previewEl.value = formatRupiah(qty * harga);
-  }
-  qtyEl.addEventListener('input', updatePreview);
-  hargaEl.addEventListener('input', () => {
-    const f = formatNumberInput(hargaEl.value);
-    if (hargaEl.value !== f) hargaEl.value = f;
-    updatePreview();
-  });
-  updatePreview();
-}
-
 async function submitPurchase(isEdit, id){
   const nama = document.getElementById('purchase-nama').value.trim();
   const tglStr = document.getElementById('purchase-tanggal').value;
